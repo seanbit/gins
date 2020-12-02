@@ -97,6 +97,20 @@ func Serve(config HttpConfig, logger logrus.FieldLogger, registerFunc GinRegiste
 		ctx.Set(key_ctx_trace, trace)
 		ctx.Next()
 	})
+
+	engine.Use(func(c *gin.Context) {
+		g := Gin{c}
+		path := c.Request.URL.Path
+		method := c.Request.Method
+		traceId := g.Trace().TraceId
+		clientIp := c.Request.RemoteAddr
+		uri := c.Request.RequestURI
+		apilog := log.WithFields(logrus.Fields{LogT:LogTypeRequestIn, "traceId":traceId, "path": path, "uri":uri, "method": method, "clientIp":clientIp})
+		if len(c.Request.URL.RawQuery) > 0 {
+			apilog.WithField("params", c.Request.URL.RawQuery)
+		}
+		apilog.Info("")
+	})
 	if config.CorsAllow {
 		if config.CorsAllowOrigins != nil {
 			corscfg := cors.DefaultConfig()
