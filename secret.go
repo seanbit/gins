@@ -71,7 +71,7 @@ func InterceptRsa() gin.HandlerFunc {
 			ctx.Abort()
 			return
 		}
-		g.Trace().SecretMethod = secret_method_rsa
+		g.Trace().SecretMethod = SecretMethodRsa
 		g.Trace().Params = jsonBytes
 		// next
 		ctx.Next()
@@ -127,7 +127,7 @@ func InterceptAes() gin.HandlerFunc {
 			return
 		}
 
-		g.Trace().SecretMethod = secret_method_aes
+		g.Trace().SecretMethod = SecretMethodAes
 		g.Trace().Params = jsonBytes
 		// next
 		ctx.Next()

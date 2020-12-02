@@ -1,10 +1,12 @@
 package gins
 
 import (
+	"fmt"
 	"testing"
 )
 
 func TestJwt(t *testing.T) {
+	fmt.Println("success")
 	//default_file_path := "../../web_config.ini"
 	//config.SetupFromLocal(default_file_path)
 	//logging.Setup()
