@@ -2,6 +2,7 @@ package gins
 
 
 const (
+	HEADER_LANGUAGE   = "Accept-Language"
 	LanguageZh string = "zh_CN"
 	LanguageEn string = "en_US"
 )

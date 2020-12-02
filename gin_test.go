@@ -136,7 +136,7 @@ func TestRequestion(t *testing.T) {
 	fmt.Println("success")
 	//ctx := &gin.Context{}
 	//g := Gin{ctx}
-	//newTrace(ctx)
+	//NewTrace(ctx)
 	//g.Trace().Language = requisition.LanguageZh
 	//fmt.Println(g.Trace().Language)
 	//var err error = requisition.NewError(nil,STATUS_CODE_PERMISSION_DENIED)

@@ -87,11 +87,11 @@ func Serve(config HttpConfig, logger logrus.FieldLogger, registerFunc GinRegiste
 	engine.Use(gin.Recovery())
 	//engine.StaticFS(config.Upload.FileSavePath, http.Dir(GetUploadFilePath()))
 	engine.Use(func(ctx *gin.Context) {
-		var lang = ctx.GetHeader("Accept-Language")
+		var lang = ctx.GetHeader(HEADER_LANGUAGE)
 		if  SupportLanguage(lang) == false {
 			lang = LanguageZh
 		}
-		trace := newTrace(ctx)
+		trace := NewTrace(ctx)
 		trace.Language = lang
 		trace.TraceId = uint64(_idWorker.GetId())
 		ctx.Set(key_ctx_trace, trace)
@@ -157,7 +157,7 @@ type Trace struct {
 /**
  * 请求信息创建，并绑定至context上
  */
-func newTrace(ctx *gin.Context) *Trace {
+func NewTrace(ctx *gin.Context) *Trace {
 	rq := &Trace{
 		SecretMethod: secret_method_nouse,
 		Params:       nil,
