@@ -38,12 +38,14 @@ type HttpConfig struct {
 	WriteTimeout     time.Duration `json:"write_timeout" validate:"required,gte=1"`
 	CorsAllow        bool          `json:"cors_allow"`
 	CorsAllowOrigins []string      `json:"cors_allow_origins"`
-	SSL              *struct {
-		CertFile string
-		KeyFile  string
-	}
+	SSL              *SSL
 	RsaOpen          bool          `json:"rsa_open"`
 	RsaMap           map[string]*RsaConfig    `json:"-"`
+}
+
+type SSL struct {
+	CertFile string		`json:"cert_file" validate:"required,gte=1"`
+	KeyFile  string		`json:"key_file" validate:"required,gte=1"`
 }
 
 /** 服务注册回调函数 **/
