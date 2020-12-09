@@ -121,6 +121,7 @@ func Serve(config HttpConfig, logger logrus.FieldLogger, registerFunc GinRegiste
 		corscfg.AllowOrigins = []string{"*"}
 		corscfg.AllowMethods = []string{"GET","POST","PUT","PATCH","DELETE","OPTIONS"}
 		corscfg.AllowHeaders = []string{"*"}
+		corscfg.AllowWebSockets = true
 		if config.CorsAllowOrigins != nil {
 			corscfg.AllowOrigins = config.CorsAllowOrigins
 		}
