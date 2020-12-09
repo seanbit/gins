@@ -117,14 +117,14 @@ func Serve(config HttpConfig, logger logrus.FieldLogger, registerFunc GinRegiste
 		apilog.Info("")
 	})
 	if config.CorsAllow {
+		corscfg := cors.DefaultConfig()
+		corscfg.AllowOrigins = []string{"*"}
+		corscfg.AllowMethods = []string{"GET","POST","PUT","PATCH","DELETE","OPTIONS"}
+		corscfg.AllowHeaders = []string{"*"}
 		if config.CorsAllowOrigins != nil {
-			corscfg := cors.DefaultConfig()
 			corscfg.AllowOrigins = config.CorsAllowOrigins
-			engine.Use(cors.New(corscfg))
-		} else {
-			engine.Use(cors.Default())
 		}
-
+		engine.Use(cors.New(corscfg))
 	}
 	registerFunc(engine)
 	// server
