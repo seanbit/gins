@@ -22,7 +22,7 @@ const (
 	key_ctx_trace     = "/seanbit/goweb/gateway/key_ctx_trace"
 	SecretMethodRsa   = SecretMethod("SecretMethodRsa")
 	SecretMethodAes   = SecretMethod("SecretMethodAes")
-	SecretMethodNouse = SecretMethod("SecretMethodNouse")
+	SecretMethodNoUse = SecretMethod("SecretMethodNoUse")
 )
 
 type CError interface {
@@ -39,13 +39,18 @@ type HttpConfig struct {
 	CorsAllow        bool          `json:"cors_allow"`
 	CorsAllowOrigins []string      `json:"cors_allow_origins"`
 	SSL              *SSL
-	RsaOpen          bool          `json:"rsa_open"`
-	RsaMap           map[string]*RsaConfig    `json:"-"`
+	RsaOpen          bool                  	`json:"rsa_open"`
+	RsaMap           map[string]*RSAKeyPair `json:"-"`
 }
 
 type SSL struct {
 	CertFile string		`json:"cert_file" validate:"required,gte=1"`
 	KeyFile  string		`json:"key_file" validate:"required,gte=1"`
+}
+
+type RSAKeyPair struct {
+	ServerPubKey 		string 			`json:"server_pub_key" validate:"required"`
+	ServerPriKey		string 			`json:"server_pri_key" validate:"required"`
 }
 
 /** 服务注册回调函数 **/
@@ -173,7 +178,7 @@ type Trace struct {
 	SecretMethod SecretMethod `json:"secretMethod"`
 	Params       []byte       `json:"params"`
 	Key          []byte       `json:"key"`
-	Rsa          *RsaConfig
+	Rsa          *RSAConfig
 	TraceId      uint64		`json:"traceId" validate:"required,gte=1"`
 	UserId       uint64      `json:"userId" validate:"required,gte=1"`
 	UserName     string      `json:"userName" validate:"required,gte=1"`
@@ -185,7 +190,7 @@ type Trace struct {
  */
 func NewTrace(ctx *gin.Context) *Trace {
 	rq := &Trace{
-		SecretMethod: SecretMethodNouse,
+		SecretMethod: SecretMethodNoUse,
 		Params:       nil,
 		Key:          nil,
 		Rsa:          nil,
@@ -211,7 +216,7 @@ func (g *Gin) Trace() *Trace {
 func (g *Gin) BindParameter(parameter interface{}) error {
 
 	switch g.Trace().SecretMethod {
-	case SecretMethodNouse:
+	case SecretMethodNoUse:
 		if err := g.Ctx.Bind(parameter); err != nil {
 			return foundation.NewError(err, STATUS_CODE_INVALID_PARAMS, err.Error())
 		}
@@ -236,32 +241,41 @@ func (g *Gin) ResponseData(data interface{}) {
 	var msg = Msg(g.Trace().Language, code)
 
 	switch g.Trace().SecretMethod {
-	case SecretMethodNouse:
-		g.LogResponseInfo(code, msg, data, "")
-		g.Response(code, msg, data, "")
+	case SecretMethodNoUse:
+		g.LogResponseInfo(code, msg, data)
+		g.Response(code, msg, data)
 		return
 	case SecretMethodAes:
 		jsonBytes, _ := json.Marshal(data)
 		if secretBytes, err := encrypt.GetAes().EncryptCBC(jsonBytes, g.Trace().Key); err == nil {
-			g.LogResponseInfo(code, msg, jsonBytes, "")
-			g.Response(code, msg, base64.StdEncoding.EncodeToString(secretBytes), "")
+			g.LogResponseInfo(code, msg, jsonBytes)
+			g.Response(code, msg, base64.StdEncoding.EncodeToString(secretBytes))
 			return
 		}
-		g.LogResponseInfo(code, msg, data, "response data aes encrypt failed")
-		g.Response(code, msg, data, "response data aes encrypt failed")
+		g.LogResponseInfo(code, msg, data)
+		g.Response(code, msg, data)
 		return
 	case SecretMethodRsa:
 		jsonBytes, _ := json.Marshal(data)
-		if secretBytes, err := encrypt.GetRsa().Encrypt(g.Trace().Rsa.ClientPubKey, jsonBytes); err == nil {
+		if g.Trace().Rsa.RespSign == true {
 			if signBytes, err := encrypt.GetRsa().Sign(g.Trace().Rsa.ServerPriKey, jsonBytes); err == nil {
-				sign := base64.StdEncoding.EncodeToString(signBytes)
-				g.LogResponseInfo(code, msg, jsonBytes, sign)
-				g.Response(code, msg, base64.StdEncoding.EncodeToString(secretBytes), sign)
-				return
+				log.Error(err)
+			} else {
+				g.Ctx.Writer.Header().Set(HEADER_REQUEST_SIGN, base64.StdEncoding.EncodeToString(signBytes))
 			}
 		}
-		g.LogResponseInfo(code, msg, data, "response data rsa encrypt failed")
-		g.Response(code, msg, data, "response data rsa encrypt failed")
+		if g.Trace().Rsa.ClientPubKey == "" {
+			g.LogResponseInfo(code, msg, data)
+			g.Response(code, msg, data)
+			return
+		}
+		if secretBytes, err := encrypt.GetRsa().Encrypt(g.Trace().Rsa.ClientPubKey, jsonBytes); err == nil {
+			g.LogResponseInfo(code, msg, jsonBytes)
+			g.Response(code, msg, base64.StdEncoding.EncodeToString(secretBytes))
+			return
+		}
+		g.LogResponseInfo(code, msg, data)
+		g.Response(code, msg, data)
 		return
 	}
 }
@@ -279,22 +293,21 @@ func (g *Gin) ResponseError(err error) {
 	if ce != nil {
 		msg := Msg(g.Trace().Language, ce.Code())
 		g.LogResponseError(ce.Code(), msg, ce.Error())
-		g.Response(ce.Code(), msg, nil, "")
+		g.Response(ce.Code(), msg, nil)
 		return
 	}
 	g.LogResponseError(STATUS_CODE_FAILED, err.Error(), "")
-	g.Response(STATUS_CODE_FAILED, err.Error(), nil, "")
+	g.Response(STATUS_CODE_FAILED, err.Error(), nil)
 }
 
 /**
  * 响应数据
  */
-func (g *Gin) Response(statusCode int, msg string, data interface{}, sign string) {
+func (g *Gin) Response(statusCode int, msg string, data interface{}) {
 	g.Ctx.JSON(http.StatusOK, gin.H{
 		"code" : statusCode,
 		"msg" :  msg,
 		"data" : data,
-		"sign" : sign,
 	})
 	return
 }

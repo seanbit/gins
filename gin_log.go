@@ -30,12 +30,12 @@ func (g *Gin) LogRequestParam(parameter interface{}) {
 	}
 }
 
-func (g *Gin) LogResponseInfo(code int, msg string, data interface{}, sign string) {
+func (g *Gin) LogResponseInfo(code int, msg string, data interface{}) {
 	traceId := g.Trace().TraceId
 	userId := g.Trace().UserId
 	userName := g.Trace().UserName
 	role := g.Trace().UserRole
-	apilog := log.WithFields(logrus.Fields{LogT:LogTypeResponseTo, "traceId":traceId, "userId":userId, "userName":userName, "role":role, "respcode":code, "respmsg":msg, "sign":sign})
+	apilog := log.WithFields(logrus.Fields{LogT:LogTypeResponseTo, "traceId":traceId, "userId":userId, "userName":userName, "role":role, "respcode":code, "respmsg":msg})
 
 	if jsonBytes, ok := data.([]byte); ok {
 		apilog.WithField("respdata", string(jsonBytes)).Info("")
