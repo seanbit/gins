@@ -113,7 +113,7 @@ func Serve(config HttpConfig, logger logrus.FieldLogger, registerFunc GinRegiste
 		path := c.Request.URL.Path
 		method := c.Request.Method
 		traceId := g.Trace().TraceId
-		clientIp := c.Request.RemoteAddr
+		clientIp := c.ClientIP()
 		uri := c.Request.RequestURI
 		apilog := log.WithFields(logrus.Fields{LogT:LogTypeRequestIn, "traceId":traceId, "path": path, "uri":uri, "method": method, "clientIp":clientIp})
 		if len(c.Request.URL.RawQuery) > 0 {
