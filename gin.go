@@ -292,6 +292,9 @@ func (g *Gin) ResponseError(err error) {
 	}
 	if ce != nil {
 		msg := Msg(g.Trace().Language, ce.Code())
+		if msg == "" && ce.Msg() != nil {
+			msg = ce.Msg()
+		}
 		g.LogResponseError(ce.Code(), msg, ce.Error())
 		g.Response(ce.Code(), msg, nil)
 		return
