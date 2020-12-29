@@ -41,6 +41,12 @@ func TestGinServer(t *testing.T) {
 		HttpPort:         8001,
 		ReadTimeout:      60 * time.Second,
 		WriteTimeout:     60 * time.Second,
+		RsaMap: map[string]*RSAKeyPair{
+			"1":&RSAKeyPair{
+				ServerPubKey: "1",
+				ServerPriKey: "2",
+			},
+		},
 	}, nil, RegisterApi)
 }
 

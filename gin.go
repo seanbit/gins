@@ -39,8 +39,7 @@ type HttpConfig struct {
 	CorsAllow        bool          `json:"cors_allow"`
 	CorsAllowOrigins []string      `json:"cors_allow_origins"`
 	SSL              *SSL
-	RsaOpen          bool                  	`json:"rsa_open"`
-	RsaMap           map[string]*RSAKeyPair `json:"-"`
+	RsaMap           map[string]*RSAKeyPair `json:"-" validate:"omitempty,dive,required"`
 }
 
 type SSL struct {
@@ -74,14 +73,6 @@ func Serve(config HttpConfig, logger logrus.FieldLogger, registerFunc GinRegiste
 	// config validate
 	if err := validate.ValidateParameter(config); err != nil {
 		log.Fatal(err)
-	}
-	if config.RsaOpen {
-		if config.RsaMap == nil {
-			log.Fatal("server http start error : secret is nil")
-		}
-		if err := validate.ValidateParameter(config.RsaMap); err != nil {
-			log.Fatal(err)
-		}
 	}
 	_config = config
 	_idWorker, _ = foundation.NewWorker(config.WorkerId)
