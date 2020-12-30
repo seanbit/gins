@@ -1,7 +1,6 @@
 package gins
 
 import (
-	"context"
 	"encoding/base64"
 	"encoding/hex"
 	"github.com/gin-gonic/gin"
@@ -28,12 +27,14 @@ type RSAConfig struct {
 	ClientPubKey 		string 			`json:"client_pub_key"`
 }
 
-type TokenParseFunc func(ctx context.Context, token string) (userId uint64, userName, role, key string, err error)
+type TokenParseFunc func(ctx *gin.Context, token string) (userId uint64, userName, role, key string, err error)
+
+type CPKGetFunc func(ctx *gin.Context) (cpk string, err error)
 
 /**
  * rsa拦截校验
  */
-func InterceptRsa(reqSign, respSign bool) gin.HandlerFunc {
+func InterceptRsa(reqSign, respSign bool, cpkGet CPKGetFunc) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		g := Gin{ctx}
 		// get rsa config
@@ -47,14 +48,10 @@ func InterceptRsa(reqSign, respSign bool) gin.HandlerFunc {
 		if err := validate.ValidateParameter(keyPair); err != nil {
 			log.Fatal(err)
 		}
-		rsa := &RSAConfig{
-			ReqSign:      reqSign,
-			RespSign:     respSign,
-			ServerPubKey: keyPair.ServerPubKey,
-			ServerPriKey: keyPair.ServerPriKey,
-			ClientPubKey: "",
-		}
-		g.Trace().Rsa = rsa
+		g.Trace().Rsa.ReqSign = reqSign
+		g.Trace().Rsa.RespSign = respSign
+		g.Trace().Rsa.ServerPubKey = keyPair.ServerPubKey
+		g.Trace().Rsa.ServerPriKey = keyPair.ServerPriKey
 
 		// params
 		var code = STATUS_CODE_SUCCESS
@@ -69,18 +66,22 @@ func InterceptRsa(reqSign, respSign bool) gin.HandlerFunc {
 			code = STATUS_CODE_INVALID_PARAMS
 		} else if encrypted, err = base64.StdEncoding.DecodeString(params.Data); err != nil { // decode
 			code = STATUS_CODE_SECRET_CHECK_FAILED
-		} else if jsonBytes, err = encrypt.GetRsa().Decrypt(rsa.ServerPriKey, encrypted); err != nil { // decrypt
+		} else if jsonBytes, err = encrypt.GetRsa().Decrypt(g.Trace().Rsa.ServerPriKey, encrypted); err != nil { // decrypt
 			code = STATUS_CODE_SECRET_CHECK_FAILED
 		}
 
 		// sign verify
-		if code == STATUS_CODE_SUCCESS && rsa.ReqSign {
-			if sign := ctx.GetHeader(HEADER_REQUEST_SIGN); sign == "" {
+		if code == STATUS_CODE_SUCCESS && g.Trace().Rsa.ReqSign {
+			if cpk, err  := cpkGet(ctx); err != nil {
+				code = STATUS_CODE_CLIENT_PUBKEY_EMPTY
+			} else if sign := ctx.GetHeader(HEADER_REQUEST_SIGN); sign == "" {
 				code = STATUS_CODE_SIGN_IS_EMPTY
 			} else if signDatas, err := base64.StdEncoding.DecodeString(sign); err != nil {
 				code = STATUS_CODE_SIGN_VALIDATE_FAILED
-			} else if err = encrypt.GetRsa().Verify(rsa.ClientPubKey, jsonBytes, signDatas); err != nil { // sign verify
+			} else if err = encrypt.GetRsa().Verify(cpk, jsonBytes, signDatas); err != nil { // sign verify
 				code = STATUS_CODE_SECRET_CHECK_FAILED
+			} else {
+				g.Trace().Rsa.ClientPubKey = cpk
 			}
 		}
 

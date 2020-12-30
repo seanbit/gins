@@ -184,7 +184,7 @@ func NewTrace(ctx *gin.Context) *Trace {
 		SecretMethod: SecretMethodNoUse,
 		Params:       nil,
 		Key:          nil,
-		Rsa:          nil,
+		Rsa:          &RSAConfig{},
 	}
 	ctx.Set(key_ctx_trace, rq)
 	return rq
