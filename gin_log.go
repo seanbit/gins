@@ -31,18 +31,21 @@ func (g *Gin) LogRequestParam(parameter interface{}) {
 }
 
 func (g *Gin) LogResponseInfo(code int, msg string, data interface{}) {
+	if g.Trace().LogData == false {
+		return
+	}
 	traceId := g.Trace().TraceId
 	userId := g.Trace().UserId
 	userName := g.Trace().UserName
 	role := g.Trace().UserRole
-	apilog := log.WithFields(logrus.Fields{LogT:LogTypeResponseTo, "traceId":traceId, "userId":userId, "userName":userName, "role":role, "respcode":code, "respmsg":msg})
+	apilog := log.WithFields(logrus.Fields{LogT:LogTypeResponseTo, "traceId":traceId, "userId":userId, "userName":userName, "role":role, "code":code, "msg":msg})
 
 	if jsonBytes, ok := data.([]byte); ok {
-		apilog.WithField("respdata", string(jsonBytes)).Info("")
+		apilog.WithField("data", string(jsonBytes)).Info("")
 	} else if jsonBytes, err := json.Marshal(data); err == nil {
-		apilog.WithField("respdata", string(jsonBytes)).Info("")
+		apilog.WithField("data", string(jsonBytes)).Info("")
 	} else {
-		apilog.WithField("respdata", data).Info("")
+		apilog.WithField("data", data).Info("")
 	}
 }
 
@@ -51,7 +54,7 @@ func (g *Gin) LogResponseError(code int, msg string, err string) {
 	userId := g.Trace().UserId
 	userName := g.Trace().UserName
 	role := g.Trace().UserRole
-	apilog := log.WithFields(logrus.Fields{LogT:LogTypeResponseErr, "traceId":traceId, "userId":userId, "userName":userName, "role":role, "respcode":code, "respmsg":msg})
+	apilog := log.WithFields(logrus.Fields{LogT:LogTypeResponseErr, "traceId":traceId, "userId":userId, "userName":userName, "role":role, "code":code, "msg":msg})
 	apilog.Info(err)
 }
 

@@ -92,7 +92,7 @@ func InterceptRsa(reqSign, respSign bool, cpkGet CPKGetFunc) gin.HandlerFunc {
 			return
 		}
 		// ctx
-		g.Trace().SecretMethod = SecretMethodRsa
+		g.Trace().SecretMethod = EncryptionRsa
 		g.Trace().Params = jsonBytes
 		// next
 		ctx.Next()
@@ -148,7 +148,7 @@ func InterceptAes() gin.HandlerFunc {
 			return
 		}
 
-		g.Trace().SecretMethod = SecretMethodAes
+		g.Trace().SecretMethod = EncryptionAes
 		g.Trace().Params = jsonBytes
 		// next
 		ctx.Next()

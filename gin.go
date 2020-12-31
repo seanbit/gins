@@ -17,12 +17,13 @@ import (
 	"time"
 )
 
-type SecretMethod string
+type Encryption string
+
 const (
-	key_ctx_trace     = "/seanbit/goweb/gateway/key_ctx_trace"
-	SecretMethodRsa   = SecretMethod("SecretMethodRsa")
-	SecretMethodAes   = SecretMethod("SecretMethodAes")
-	SecretMethodNoUse = SecretMethod("SecretMethodNoUse")
+	key_ctx_trace  = "/seanbit/gins/gateway/key_ctx_trace"
+	EncryptionRsa  = Encryption("EncryptionRsa")
+	EncryptionAes  = Encryption("EncryptionAes")
+	EncryptionNone = Encryption("EncryptionNone")
 )
 
 type CError interface {
@@ -69,7 +70,7 @@ func Serve(config HttpConfig, logger logrus.FieldLogger, registerFunc GinRegiste
 	if logger == nil {
 		logger = logrus.New()
 	}
-	log = logger.WithField("stage", "ginserver")
+	log = logger.WithField("LogIn", "gins")
 	// config validate
 	if err := validate.ValidateParameter(config); err != nil {
 		log.Fatal(err)
@@ -165,15 +166,16 @@ type Gin struct {
  * 服务信息
  */
 type Trace struct {
-	Language     string
-	SecretMethod SecretMethod `json:"secretMethod"`
-	Params       []byte       `json:"params"`
-	Key          []byte       `json:"key"`
+	Language     string     `json:"language"`
+	SecretMethod Encryption `json:"secretMethod"`
+	Params       []byte     `json:"params"`
+	Key          []byte     `json:"key"`
 	Rsa          *RSAConfig
 	TraceId      uint64		`json:"traceId" validate:"required,gte=1"`
-	UserId       uint64      `json:"userId" validate:"required,gte=1"`
-	UserName     string      `json:"userName" validate:"required,gte=1"`
+	UserId       uint64     `json:"userId" validate:"required,gte=1"`
+	UserName     string     `json:"userName" validate:"required,gte=1"`
 	UserRole     string		`json:"userRole" validate:"required,gte=1"`
+	LogData      bool		`json:"logData"`
 }
 
 /**
@@ -181,10 +183,11 @@ type Trace struct {
  */
 func NewTrace(ctx *gin.Context) *Trace {
 	rq := &Trace{
-		SecretMethod: SecretMethodNoUse,
-		Params:       nil,
-		Key:          nil,
-		Rsa:          &RSAConfig{},
+		SecretMethod: 	EncryptionNone,
+		Params:     	nil,
+		Key:        	nil,
+		Rsa:        	&RSAConfig{},
+		LogData: 		true,
 	}
 	ctx.Set(key_ctx_trace, rq)
 	return rq
@@ -207,14 +210,14 @@ func (g *Gin) Trace() *Trace {
 func (g *Gin) BindParameter(parameter interface{}) error {
 
 	switch g.Trace().SecretMethod {
-	case SecretMethodNoUse:
+	case EncryptionNone:
 		if err := g.Ctx.Bind(parameter); err != nil {
 			return foundation.NewError(err, STATUS_CODE_INVALID_PARAMS, err.Error())
 		}
 		g.LogRequestParam(parameter)
 		return nil
-	case SecretMethodAes:fallthrough
-	case SecretMethodRsa:
+	case EncryptionAes:fallthrough
+	case EncryptionRsa:
 		if err := json.Unmarshal(g.Trace().Params, parameter); err != nil {
 			return foundation.NewError(err, STATUS_CODE_INVALID_PARAMS, err.Error())
 		}
@@ -232,11 +235,11 @@ func (g *Gin) ResponseData(data interface{}) {
 	var msg = Msg(g.Trace().Language, code)
 
 	switch g.Trace().SecretMethod {
-	case SecretMethodNoUse:
+	case EncryptionNone:
 		g.LogResponseInfo(code, msg, data)
 		g.Response(code, msg, data)
 		return
-	case SecretMethodAes:
+	case EncryptionAes:
 		jsonBytes, _ := json.Marshal(data)
 		if secretBytes, err := encrypt.GetAes().EncryptCBC(jsonBytes, g.Trace().Key); err == nil {
 			g.LogResponseInfo(code, msg, jsonBytes)
@@ -246,7 +249,7 @@ func (g *Gin) ResponseData(data interface{}) {
 		g.LogResponseInfo(code, msg, data)
 		g.Response(code, msg, data)
 		return
-	case SecretMethodRsa:
+	case EncryptionRsa:
 		jsonBytes, _ := json.Marshal(data)
 		if g.Trace().Rsa.RespSign == true {
 			if signBytes, err := encrypt.GetRsa().Sign(g.Trace().Rsa.ServerPriKey, jsonBytes); err == nil {
