@@ -166,16 +166,16 @@ type Gin struct {
  * 服务信息
  */
 type Trace struct {
-	Language     string     `json:"language"`
-	SecretMethod Encryption `json:"secretMethod"`
-	Params       []byte     `json:"params"`
-	Key          []byte     `json:"key"`
-	Rsa          *RSAConfig
-	TraceId      uint64		`json:"traceId" validate:"required,gte=1"`
-	UserId       uint64     `json:"userId" validate:"required,gte=1"`
-	UserName     string     `json:"userName" validate:"required,gte=1"`
-	UserRole     string		`json:"userRole" validate:"required,gte=1"`
-	LogData      bool		`json:"logData"`
+	Language  string     `json:"language"`
+	EncMethod Encryption `json:"encMethod"`
+	Params    []byte     `json:"params"`
+	Key       []byte     `json:"key"`
+	Rsa       *RSAConfig
+	TraceId   uint64		`json:"traceId" validate:"required,gte=1"`
+	UserId    uint64     `json:"userId" validate:"required,gte=1"`
+	UserName  string     `json:"userName" validate:"required,gte=1"`
+	UserRole  string		`json:"userRole" validate:"required,gte=1"`
+	LogData   bool		`json:"logData"`
 }
 
 /**
@@ -183,11 +183,11 @@ type Trace struct {
  */
 func NewTrace(ctx *gin.Context) *Trace {
 	rq := &Trace{
-		SecretMethod: 	EncryptionNone,
-		Params:     	nil,
-		Key:        	nil,
-		Rsa:        	&RSAConfig{},
-		LogData: 		true,
+		EncMethod: EncryptionNone,
+		Params:    nil,
+		Key:       nil,
+		Rsa:       &RSAConfig{},
+		LogData:   true,
 	}
 	ctx.Set(key_ctx_trace, rq)
 	return rq
@@ -209,7 +209,7 @@ func (g *Gin) Trace() *Trace {
  */
 func (g *Gin) BindParameter(parameter interface{}) error {
 
-	switch g.Trace().SecretMethod {
+	switch g.Trace().EncMethod {
 	case EncryptionNone:
 		if err := g.Ctx.Bind(parameter); err != nil {
 			return foundation.NewError(err, STATUS_CODE_INVALID_PARAMS, err.Error())
@@ -234,7 +234,7 @@ func (g *Gin) ResponseData(data interface{}) {
 	var code = STATUS_CODE_SUCCESS
 	var msg = Msg(g.Trace().Language, code)
 
-	switch g.Trace().SecretMethod {
+	switch g.Trace().EncMethod {
 	case EncryptionNone:
 		g.LogResponseInfo(code, msg, data)
 		g.Response(code, msg, data)

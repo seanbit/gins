@@ -8,7 +8,7 @@ import (
 type LogType string
 
 const (
-	LogT				= "T"
+	LogT				= "GIN"
 	LogTypeRequestIn 	= LogType("ReqIn")
 	LogTypeRequestInfo 	= LogType("ReqInfo")
 	LogTypeResponseTo 	= LogType("RespTo")
@@ -31,21 +31,22 @@ func (g *Gin) LogRequestParam(parameter interface{}) {
 }
 
 func (g *Gin) LogResponseInfo(code int, msg string, data interface{}) {
-	if g.Trace().LogData == false {
-		return
-	}
 	traceId := g.Trace().TraceId
 	userId := g.Trace().UserId
 	userName := g.Trace().UserName
 	role := g.Trace().UserRole
 	apilog := log.WithFields(logrus.Fields{LogT:LogTypeResponseTo, "traceId":traceId, "userId":userId, "userName":userName, "role":role, "code":code, "msg":msg})
 
+	if g.Trace().LogData == false {
+		apilog.Info("")
+		return
+	}
 	if jsonBytes, ok := data.([]byte); ok {
-		apilog.WithField("data", string(jsonBytes)).Info("")
+		apilog.Info(string(jsonBytes))
 	} else if jsonBytes, err := json.Marshal(data); err == nil {
-		apilog.WithField("data", string(jsonBytes)).Info("")
+		apilog.Info(string(jsonBytes))
 	} else {
-		apilog.WithField("data", data).Info("")
+		apilog.Info(data)
 	}
 }
 
