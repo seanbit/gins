@@ -39,6 +39,7 @@ type HttpConfig struct {
 	WriteTimeout     time.Duration `json:"write_timeout" validate:"required,gte=1"`
 	CorsAllow        bool          `json:"cors_allow"`
 	CorsAllowOrigins []string      `json:"cors_allow_origins"`
+	CorsAllowHeaders []string      `json:"cors_allow_headers"`
 	SSL              *SSL
 	RsaMap           map[string]*RSAKeyPair `json:"-" validate:"omitempty,dive,required"`
 }
@@ -117,7 +118,9 @@ func Serve(config HttpConfig, logger logrus.FieldLogger, registerFunc GinRegiste
 		corscfg := cors.DefaultConfig()
 		corscfg.AllowOrigins = []string{"*"}
 		corscfg.AllowMethods = []string{"GET","POST","PUT","PATCH","DELETE","OPTIONS"}
-		corscfg.AllowHeaders = []string{"*"}
+		if config.CorsAllowHeaders != nil {
+			corscfg.AllowHeaders = append(corscfg.AllowHeaders, config.CorsAllowHeaders...)
+		}
 		corscfg.AllowWebSockets = true
 		if config.CorsAllowOrigins != nil {
 			corscfg.AllowOrigins = config.CorsAllowOrigins

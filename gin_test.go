@@ -36,11 +36,13 @@ type GoodsPayParameter struct {
 func TestGinServer(t *testing.T) {
 	// server start
 	Serve(HttpConfig{
-		RunMode:          "test",
+		RunMode:          "debug",
 		WorkerId:         0,
-		HttpPort:         8001,
+		HttpPort:         6001,
 		ReadTimeout:      60 * time.Second,
 		WriteTimeout:     60 * time.Second,
+		CorsAllow: true,
+		CorsAllowHeaders: []string{"authorization", "api-version", "sign"},
 		RsaMap: map[string]*RSAKeyPair{
 			"1":&RSAKeyPair{
 				ServerPubKey: "1",
@@ -51,12 +53,28 @@ func TestGinServer(t *testing.T) {
 }
 
 func RegisterApi(engine *gin.Engine) {
-	apiv1 := engine.Group("api/order/v1")
+	apiv1 := engine.Group("api/v1")
 	{
+		apiv1.POST("/unsimple/test", test)
 		apiv1.POST("/bindtest", bindtest)
 	}
 	engine.Static("/Desktop", "/Users/Sean/Desktop")
 }
+
+type SignInRequest struct{
+	UserName string `json:"userName"`
+	Password string	`json:"password"`
+}
+func test(ctx *gin.Context) {
+	g := Gin{Ctx: ctx}
+	var req SignInRequest
+	if err := g.BindParameter(&req); err != nil {
+		g.ResponseError(err)
+		return
+	}
+	g.ResponseData("this is responsed token")
+}
+
 /*
 	StaticFile(string, string) IRoutes	静态文件路由 router.StaticFile("favicon.ico", "./resources/favicon.ico")
 	Static(string, string) IRoutes	静态文件夹路由 router.Static("/路由","./文件夹目录")
