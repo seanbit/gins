@@ -42,6 +42,7 @@ type HttpConfig struct {
 	CorsAllowHeaders []string      `json:"cors_allow_headers"`
 	SSL              *SSL
 	RsaMap           map[string]*RSAKeyPair `json:"-" validate:"omitempty,dive,required"`
+	SignalWatch      bool
 }
 
 type SSL struct {
