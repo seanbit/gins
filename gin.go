@@ -148,18 +148,20 @@ func Serve(config HttpConfig, logger logrus.FieldLogger, registerFunc GinRegiste
 			}
 		}
 	}()
-	// signal
-	quit := make(chan os.Signal)
-	signal.Notify(quit, os.Interrupt)
-	<- quit
-	log.Println("Shutdown Server ...")
+	if config.SignalWatch {
+		// signal
+		quit := make(chan os.Signal)
+		signal.Notify(quit, os.Interrupt)
+		<- quit
+		log.Println("Shutdown Server ...")
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5 * time.Second)
-	defer cancel()
-	if err := s.Shutdown(ctx); err != nil {
-		log.Fatal("Server Shutdown:", err)
+		ctx, cancel := context.WithTimeout(context.Background(), 5 * time.Second)
+		defer cancel()
+		if err := s.Shutdown(ctx); err != nil {
+			log.Fatal("Server Shutdown:", err)
+		}
+		log.Println("Server exiting")
 	}
-	log.Println("Server exiting")
 }
 
 type Gin struct {
