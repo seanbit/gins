@@ -43,6 +43,7 @@ type HttpConfig struct {
 	SSL              *SSL
 	RsaMap           map[string]*RSAKeyPair `json:"-" validate:"omitempty,dive,required"`
 	SignalWatch      bool
+	DefaultLang		 string
 }
 
 type SSL struct {
@@ -93,7 +94,11 @@ func Serve(config HttpConfig, logger logrus.FieldLogger, registerFunc GinRegiste
 	engine.Use(func(ctx *gin.Context) {
 		var lang = ctx.GetHeader(HEADER_LANGUAGE)
 		if  SupportLanguage(lang) == false {
-			lang = LanguageZh
+			if len(_config.DefaultLang) > 0 {
+				lang = _config.DefaultLang
+			} else {
+				lang = LanguageZh
+			}
 		}
 		trace := NewTrace(ctx)
 		trace.Language = lang
