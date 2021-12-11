@@ -305,7 +305,7 @@ func (g *Gin) ResponseError(err error) {
 		return
 	}
 	g.LogResponseError(STATUS_CODE_FAILED, err.Error(), "")
-	g.Response(STATUS_CODE_FAILED, "", nil)
+	g.Response(STATUS_CODE_FAILED, Msg(g.Trace().Language, STATUS_CODE_FAILED), nil)
 }
 
 /**
