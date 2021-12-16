@@ -42,7 +42,7 @@ type HttpConfig struct {
 	CorsAllowHeaders []string      `json:"cors_allow_headers"`
 	SSL              *SSL
 	RsaMap           map[string]*RSAKeyPair `json:"-" validate:"omitempty,dive,required"`
-	ForwardedByClientIP bool
+	TrustedProxies   []string		`json:"trusted_proxies"`
 	SignalWatch      bool
 	DefaultLang		 string
 }
@@ -91,7 +91,7 @@ func Serve(config HttpConfig, logger logrus.FieldLogger, registerFunc GinRegiste
 	//engine := gin.Default()
 	engine := gin.New()
 	engine.Use(gin.Recovery())
-	engine.ForwardedByClientIP = config.ForwardedByClientIP
+	engine.TrustedProxies = config.TrustedProxies
 	//engine.StaticFS(config.Upload.FileSavePath, http.Dir(GetUploadFilePath()))
 	engine.Use(func(ctx *gin.Context) {
 		var lang = ctx.GetHeader(HEADER_LANGUAGE)
