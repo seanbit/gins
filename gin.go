@@ -91,7 +91,9 @@ func Serve(config HttpConfig, logger logrus.FieldLogger, registerFunc GinRegiste
 	//engine := gin.Default()
 	engine := gin.New()
 	engine.Use(gin.Recovery())
-	engine.TrustedProxies = config.TrustedProxies
+	if err := engine.SetTrustedProxies(config.TrustedProxies); err != nil {
+		log.Fatal(err)
+	}
 	//engine.StaticFS(config.Upload.FileSavePath, http.Dir(GetUploadFilePath()))
 	engine.Use(func(ctx *gin.Context) {
 		var lang = ctx.GetHeader(HEADER_LANGUAGE)
