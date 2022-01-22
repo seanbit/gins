@@ -120,9 +120,10 @@ func Serve(config HttpConfig, logger logrus.FieldLogger, registerFunc GinRegiste
 		uri := c.Request.RequestURI
 		apilog := log.WithFields(logrus.Fields{LogT:LogTypeRequestIn, "traceId":traceId, "path": path, "uri":uri, "method": method, "clientIp":clientIp})
 		if len(c.Request.URL.RawQuery) > 0 {
-			apilog.WithField("params", c.Request.URL.RawQuery)
+			apilog.Info(c.Request.URL.RawQuery)
+		} else {
+			apilog.Info("")
 		}
-		apilog.Info("")
 	})
 	if config.CorsAllow {
 		corscfg := cors.DefaultConfig()

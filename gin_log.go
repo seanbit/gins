@@ -2,6 +2,7 @@ package gins
 
 import (
 	"encoding/json"
+	"github.com/seanbit/gokit/foundation"
 	"github.com/sirupsen/logrus"
 )
 
@@ -22,11 +23,11 @@ func (g *Gin) LogRequestParam(parameter interface{}) {
 	role := g.Trace().UserRole
 	apilog := log.WithFields(logrus.Fields{LogT:LogTypeRequestInfo, "traceId":traceId, "userId":userId, "userName":userName, "role":role})
 	if jsonBytes, ok := parameter.([]byte); ok {
-		apilog.WithField("params", string(jsonBytes)).Info("")
+		apilog.Info(string(jsonBytes))
 	} else if jsonBytes, err := json.Marshal(parameter); err == nil {
-		apilog.WithField("params", string(jsonBytes)).Info("")
+		apilog.Info(string(jsonBytes))
 	} else {
-		apilog.WithField("params", parameter).Info("")
+		apilog.Info(parameter)
 	}
 }
 
@@ -37,7 +38,7 @@ func (g *Gin) LogResponseInfo(code int, msg string, data interface{}) {
 	role := g.Trace().UserRole
 	apilog := log.WithFields(logrus.Fields{LogT:LogTypeResponseTo, "traceId":traceId, "userId":userId, "userName":userName, "role":role, "code":code, "msg":msg})
 
-	if g.Trace().LogData == false {
+	if _config.RunMode != foundation.RUN_MODE_DEBUG && g.Trace().LogData == false {
 		apilog.Info("")
 		return
 	}
