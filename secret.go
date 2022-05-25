@@ -66,7 +66,7 @@ func InterceptRsa(reqSign, respSign bool, cpkGet CPKGetFunc) gin.HandlerFunc {
 			code = STATUS_CODE_INVALID_PARAMS
 		} else if encrypted, err = base64.StdEncoding.DecodeString(params.Data); err != nil { // decode
 			code = STATUS_CODE_SECRET_CHECK_FAILED
-		} else if jsonBytes, err = encrypt.GetRsa().Decrypt(g.Trace().Rsa.ServerPriKey, encrypted); err != nil { // decrypt
+		} else if jsonBytes, err = encrypt.Rsa().Decrypt(g.Trace().Rsa.ServerPriKey, encrypted); err != nil { // decrypt
 			code = STATUS_CODE_SECRET_CHECK_FAILED
 		}
 
@@ -78,7 +78,7 @@ func InterceptRsa(reqSign, respSign bool, cpkGet CPKGetFunc) gin.HandlerFunc {
 				code = STATUS_CODE_SIGN_IS_EMPTY
 			} else if signDatas, err := base64.StdEncoding.DecodeString(sign); err != nil {
 				code = STATUS_CODE_SIGN_VALIDATE_FAILED
-			} else if err = encrypt.GetRsa().Verify(cpk, jsonBytes, signDatas); err != nil { // sign verify
+			} else if err = encrypt.Rsa().Verify(cpk, jsonBytes, signDatas); err != nil { // sign verify
 				code = STATUS_CODE_SECRET_CHECK_FAILED
 			} else {
 				g.Trace().Rsa.ClientPubKey = cpk
@@ -138,7 +138,7 @@ func InterceptAes() gin.HandlerFunc {
 			code = STATUS_CODE_INVALID_PARAMS
 		} else if encrypted, err = base64.StdEncoding.DecodeString(params.Data); err != nil { // decode
 			code = STATUS_CODE_SECRET_CHECK_FAILED
-		} else if jsonBytes, err = encrypt.GetAes().DecryptCBC(encrypted, g.Trace().Key); err != nil { // decrypt
+		} else if jsonBytes, err = encrypt.Aes().DecryptCBC(encrypted, g.Trace().Key); err != nil { // decrypt
 			code = STATUS_CODE_SECRET_CHECK_FAILED
 		}
 		// code check

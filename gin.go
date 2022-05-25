@@ -257,7 +257,7 @@ func (g *Gin) ResponseData(data interface{}) {
 		return
 	case EncryptionAes:
 		jsonBytes, _ := json.Marshal(data)
-		if secretBytes, err := encrypt.GetAes().EncryptCBC(jsonBytes, g.Trace().Key); err != nil {
+		if secretBytes, err := encrypt.Aes().EncryptCBC(jsonBytes, g.Trace().Key); err != nil {
 			g.LogResponseInfo(code, msg, jsonBytes)
 			g.Response(code, msg, base64.StdEncoding.EncodeToString(secretBytes))
 			return
@@ -268,7 +268,7 @@ func (g *Gin) ResponseData(data interface{}) {
 	case EncryptionRsa:
 		jsonBytes, _ := json.Marshal(data)
 		if g.Trace().Rsa.RespSign == true {
-			if signBytes, err := encrypt.GetRsa().Sign(g.Trace().Rsa.ServerPriKey, jsonBytes); err != nil {
+			if signBytes, err := encrypt.Rsa().Sign(g.Trace().Rsa.ServerPriKey, jsonBytes); err != nil {
 				log.Error(err)
 			} else {
 				g.Ctx.Writer.Header().Set(HEADER_REQUEST_SIGN, base64.StdEncoding.EncodeToString(signBytes))
@@ -279,7 +279,7 @@ func (g *Gin) ResponseData(data interface{}) {
 			g.Response(code, msg, data)
 			return
 		}
-		if secretBytes, err := encrypt.GetRsa().Encrypt(g.Trace().Rsa.ClientPubKey, jsonBytes); err == nil {
+		if secretBytes, err := encrypt.Rsa().Encrypt(g.Trace().Rsa.ClientPubKey, jsonBytes); err == nil {
 			g.LogResponseInfo(code, msg, jsonBytes)
 			g.Response(code, msg, base64.StdEncoding.EncodeToString(secretBytes))
 			return
