@@ -22,6 +22,7 @@ type SecretParams struct {
 type RSAConfig struct {
 	ReqSign				bool
 	RespSign			bool
+	RespEncrypt         bool
 	ServerPubKey 		string 			`json:"server_pub_key" validate:"required"`
 	ServerPriKey		string 			`json:"server_pri_key" validate:"required"`
 	ClientPubKey 		string 			`json:"client_pub_key"`
@@ -34,7 +35,7 @@ type CPKGetFunc func(ctx *gin.Context) (cpk string, err error)
 /**
  * rsa拦截校验
  */
-func InterceptRsa(reqSign, respSign bool, cpkGet CPKGetFunc) gin.HandlerFunc {
+func InterceptRsa(reqSign, respSign, respEncrypt bool, cpkGet CPKGetFunc) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		g := Gin{ctx}
 		// get rsa config
@@ -50,6 +51,7 @@ func InterceptRsa(reqSign, respSign bool, cpkGet CPKGetFunc) gin.HandlerFunc {
 		}
 		g.Trace().Rsa.ReqSign = reqSign
 		g.Trace().Rsa.RespSign = respSign
+		g.Trace().Rsa.RespEncrypt = respEncrypt
 		g.Trace().Rsa.ServerPubKey = keyPair.ServerPubKey
 		g.Trace().Rsa.ServerPriKey = keyPair.ServerPriKey
 

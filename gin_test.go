@@ -156,7 +156,7 @@ func TestPostToGinServer(t *testing.T)  {
 	}
 }
 
-func TestRequestion(t *testing.T) {
+func TestRequesting(t *testing.T) {
 	fmt.Println("success")
 	//ctx := &gin.Context{}
 	//g := Gin{ctx}

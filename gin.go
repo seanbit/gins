@@ -274,7 +274,7 @@ func (g *Gin) ResponseData(data interface{}) {
 				g.Ctx.Writer.Header().Set(HEADER_REQUEST_SIGN, base64.StdEncoding.EncodeToString(signBytes))
 			}
 		}
-		if g.Trace().Rsa.ClientPubKey == "" {
+		if !g.Trace().Rsa.RespEncrypt || g.Trace().Rsa.ClientPubKey == "" {
 			g.LogResponseInfo(code, msg, data)
 			g.Response(code, msg, data)
 			return
